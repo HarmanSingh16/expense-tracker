@@ -47,6 +47,7 @@ func loadExpenses() []Expense {
 
 	if err := json.Unmarshal(data, &expenses); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	return expenses
@@ -58,7 +59,10 @@ func saveExpenses(expenses []Expense) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	os.WriteFile(filename, data, 0644)
+	if err := os.WriteFile(filename, data, 0644); err != nil{
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 func addExpense(description string, amount int, expenses []Expense) []Expense {
@@ -88,14 +92,36 @@ func deleteExpense(id int, expenses []Expense) []Expense {
 	return expenses
 }
 
+func updateExpense(id int, description string, amount int, expenses []Expense) []Expense {
+	var found bool = false
+	for i := range expenses {
+		if expenses[i].ID == id {
+			found = true
+			if description != "" {
+				expenses[i].Description = description
+			}
+			if amount >= 0 {
+				expenses[i].Amount = amount
+			}
+			fmt.Println("Expense updated successfully")
+			break
+		}
+	}
+
+	if !found {
+		fmt.Println("No expense found")
+	}
+	return expenses
+}
 func main() {
 	var expenses = loadExpenses()
 	args := os.Args[1:]
 
 	if len(args) < 1 {
-		fmt.Println("Usage: expense-tracker add|delete|summary|list")
+		fmt.Println("Usage: expense-tracker add|delete|summary|list|update")
 		return
 	}
+
 	switch args[0] {
 	case "add":
 		addCmd := flag.NewFlagSet("add", flag.ExitOnError)
@@ -116,7 +142,7 @@ func main() {
 			return
 		}
 
-		expenses = addExpense(*dscpPtr, *amountPtr, expenses)
+		expenses = addExpense(description, amount, expenses)
 		saveExpenses(expenses)
 
 	case "list":
@@ -149,12 +175,12 @@ func main() {
 				}
 			}
 
-			fmt.Printf("Total expenses for month %s: $%d\n",month, total)
+			fmt.Printf("Total expenses for month %s: $%d\n", month, total)
 		}
 
 	case "delete":
 		deleteCmd := flag.NewFlagSet("delete", flag.ExitOnError)
-		idPtr := deleteCmd.Int("id", -1, "Enter id of the task to delete")
+		idPtr := deleteCmd.Int("id", -1, "ID of the expense to delete")
 		deleteCmd.Parse(os.Args[2:])
 
 		id := *idPtr
@@ -164,9 +190,31 @@ func main() {
 			expenses = deleteExpense(*idPtr, expenses)
 			saveExpenses(expenses)
 		}
-	
+
+	case "update":
+		updateCmd := flag.NewFlagSet("update", flag.ExitOnError)
+		idPtr := updateCmd.Int("id", -1, "ID of the expense to update")
+		dscpPtr := updateCmd.String("description", "", "New description")
+		amountPtr := updateCmd.Int("amount", -1, "New amount")
+		updateCmd.Parse(os.Args[2:])
+
+		id := *idPtr
+		if id == -1 {
+			fmt.Println("Usage: expense-tracker update -id=<id> [-description=<description>] [-amount=<amount>]")
+			return
+		} else {
+			description := strings.TrimSpace(*dscpPtr)
+			amount := *amountPtr
+
+			if description == "" && amount < 0 {
+				fmt.Println("Usage: expense-tracker update -id=<id> [-description=<description>] [-amount=<amount>]")
+				return
+			}
+			expenses = updateExpense(*idPtr, description, amount, expenses)
+			saveExpenses(expenses)
+		}
 	default:
 		fmt.Println("Invalid Argument")
-		fmt.Println("Usage: expense-tracker add|delete|summary|list")
+		fmt.Println("Usage: expense-tracker add|delete|summary|list|update")
 	}
 }
