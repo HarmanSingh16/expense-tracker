@@ -8,6 +8,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"text/tabwriter"
 	"time"
 )
 
@@ -59,7 +60,7 @@ func saveExpenses(expenses []Expense) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	if err := os.WriteFile(filename, data, 0644); err != nil{
+	if err := os.WriteFile(filename, data, 0644); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -146,11 +147,14 @@ func main() {
 		saveExpenses(expenses)
 
 	case "list":
-		fmt.Println("ID\tDate\tDescription\tAmount")
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
+
+		fmt.Fprintln(w, "ID\tDate\tDescription\tAmount")
 		for _, expense := range expenses {
-			fmt.Printf("%d\t%s\t%s\t$%d\n", expense.ID, expense.Date.Format("2006-01-02"), expense.Description, expense.Amount)
+			fmt.Fprintf(w, "%d\t%s\t%s\t$%d\n", expense.ID, expense.Date.Format("2006-01-02"), expense.Description, expense.Amount)
 		}
 
+		w.Flush()
 	case "summary":
 		var total int
 		if len(args) < 2 {
