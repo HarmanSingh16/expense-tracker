@@ -1,0 +1,26 @@
+[
+ {
+  "id": 1,
+  "date": "2026-09-11T14:26:44.757585+05:30",
+  "description": "Bottle",
+  "amount": 20
+ },
+ {
+  "id": 2,
+  "date": "2026-09-11T14:26:52.906928+05:30",
+  "description": "Earbuds",
+  "amount": 10
+ },
+ {
+  "id": 3,
+  "date": "2026-09-11T14:32:49.562744+05:30",
+  "description": "something",
+  "amount": 20
+ },
+ {
+  "id": 4,
+  "date": "2026-09-11T14:49:40.30694+05:30",
+  "description": "something",
+  "amount": 20
+ }
+]
